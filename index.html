@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Recipe Finder</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  /* Reset & base */
+  * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
+  body { background: #f4f7fa; color: #333; }
+  a { text-decoration: none; color: inherit; }
+
+  /* Container */
+  .container { max-width: 1000px; margin: auto; padding: 20px; text-align: center; }
+
+  /* Landing Page */
+  #landing { display: flex; flex-direction: column; justify-content: center; align-items: center; height: 100vh; background: linear-gradient(135deg, #008080, #ff9472); color: white; }
+  #landing h1 { font-size: 3em; margin-bottom: 20px; }
+  #landing p { font-size: 1.2em; max-width: 600px; margin-bottom: 30px; line-height: 1.5; }
+  #landing button { padding: 12px 30px; font-size: 1em; border: none; border-radius: 8px; background: white; color: #008080; font-weight: 600; cursor: pointer; transition: 0.3s; }
+  #landing button:hover { background: #ffe8e4; }
+
+/* Search Section */
+#searchSection {
+    display: none;
+    padding-top: 50px;
+    min-height: 100vh;
+    min-width: 100vw;
+    margin-left: calc(-50vw + 50%);
+    margin-right: calc(-50vw + 50%);
+    background: linear-gradient(135deg, #008080, #ff9472);
+    color: #222;
+}
+#searchSection h2 {
+    font-size: 2em;
+    margin-bottom: 20px;
+    color: #fff;
+}
+#searchSection input {
+    padding: 12px;
+    width: 300px;
+    font-size: 1em;
+    border-radius: 8px;
+    border: 1px solid #b2dfdb;
+    margin-right: 10px;
+    background: #fff;
+    color: #222;
+}
+#searchSection button {
+    padding: 12px 20px;
+    font-size: 1em;
+    border-radius: 8px;
+    border: none;
+    background: #008080;
+    color: #fff;
+    font-weight: 600;
+    cursor: pointer;
+    transition: 0.3s;
+}
+#searchSection button:hover {
+    background: #ff9472;
+    color: #fff;
+}
+
+  /* Recipes Grid */
+  #results { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 20px; margin-top: 30px; }
+
+  .recipe { background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.1); transition: transform 0.3s; }
+  .recipe:hover { transform: translateY(-5px); }
+  .recipe img { width: 100%; height: 150px; object-fit: cover; }
+  .recipe-content { padding: 15px; }
+  .recipe h3 { font-size: 1.1em; margin-bottom: 10px; color: #008080; }
+  .recipe a { display: inline-block; padding: 6px 12px; background: #008080; color: white; border-radius: 6px; font-size: 0.9em; font-weight: 600; transition: 0.3s; }
+  .recipe a:hover { background: #ff9472; }
+
+  /* Responsive */
+  @media(max-width: 600px) {
+    #landing h1 { font-size: 2.2em; }
+    #landing p { font-size: 1em; }
+    #searchSection input { width: 200px; margin-bottom: 10px; }
+    #searchSection button { width: 100%; }
+  }
+</style>
+</head>
+<body>
+
+<div id="landing">
+  <h1>Recipe Finder</h1>
+  <p>Turn your ingredients into delicious meals. Save food, save time, and get inspired in the kitchen with simple recipes!</p>
+  <button id="getStartedBtn">Get Started</button>
+</div>
+
+<div class="container" id="searchSection">
+  <h2>Search Recipes by Ingredients</h2>
+  <input type="text" id="ingredients" placeholder="e.g. chicken, broccoli">
+  <button id="searchBtn">Search</button>
+  <div id="results"></div>
+</div>
+
+<script>
+const getStartedBtn = document.getElementById('getStartedBtn');
+const landing = document.getElementById('landing');
+const searchSection = document.getElementById('searchSection');
+
+getStartedBtn.addEventListener('click', () => {
+    landing.style.display = 'none';
+    searchSection.style.display = 'block';
+});
+
+const searchBtn = document.getElementById('searchBtn');
+const results = document.getElementById('results');
+
+searchBtn.addEventListener('click', async () => {
+    const ingredients = document.getElementById('ingredients').value.trim();
+    if (!ingredients) return alert('Please enter some ingredients!');
+    results.innerHTML = '<p>Loading...</p>';
+
+    try {
+        const res = await fetch(`http://localhost:5000/api/recipes/search?ingredients=${ingredients}`);
+        const data = await res.json();
+        results.innerHTML = '';
+        if (!data.length) {
+            results.innerHTML = '<p>No recipes found.</p>';
+            return;
+        }
+        data.forEach(recipe => {
+            const div = document.createElement('div');
+            div.className = 'recipe';
+            div.innerHTML = `
+                <img src="${recipe.image}" alt="${recipe.title}">
+                <div class="recipe-content">
+                    <h3>${recipe.title}</h3>
+                    <a href="https://spoonacular.com/recipes/${recipe.title.replace(/\s+/g, '-')}-${recipe.id}" target="_blank">View Recipe</a>
+                </div>
+            `;
+            results.appendChild(div);
+        });
+    } catch (err) {
+        results.innerHTML = '<p>Failed to fetch recipes.</p>';
+        console.error(err);
+    }
+});
+</script>
+
+</body>
+</html>
